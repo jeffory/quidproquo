@@ -1,0 +1,21 @@
+{
+  "version": "45.0.0",
+  "files": {
+    "0f09aabd5f832d66520f28be9318d5419a3c99a6ec7e90e1190efcbb6b26b5be": {
+      "displayName": "Bootstrap Template",
+      "source": {
+        "path": "Bootstrap.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "000000000000-us-east-1-7e8a3f91": {
+          "bucketName": "cdk-hnb659fds-assets-000000000000-us-east-1",
+          "objectKey": "0f09aabd5f832d66520f28be9318d5419a3c99a6ec7e90e1190efcbb6b26b5be.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::000000000000:role/cdk-hnb659fds-file-publishing-role-000000000000-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

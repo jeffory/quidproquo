@@ -132,7 +132,7 @@ resource "aws_vpc_endpoint" "this" {
   for_each = { for ep in var.vpc_endpoints : ep.service_name => ep }
 
   vpc_id              = aws_vpc.this.id
-  service_name      = "com.amazonaws.${data.aws_region.current.region}.${each.value.service_name}"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.${each.value.service_name}"
   vpc_endpoint_type   = each.value.service_type
   route_table_ids     = each.value.service_type == "Gateway" ? each.value.route_table_ids : null
   subnet_ids          = each.value.service_type == "Interface" ? each.value.subnet_ids : null
