@@ -11,9 +11,22 @@ JS Library for building web servers using pure functions and generators.
 - [quidproquo-web-admin](https://www.npmjs.com/package/quidproquo-web-admin)
 - [quidproquo-config-aws](https://www.npmjs.com/package/quidproquo-config-aws)
 - [quidproquo-deploy-awscdk](https://www.npmjs.com/package/quidproquo-deploy-awscdk)
+- [quidproquo-deploy-terraform](https://www.npmjs.com/package/quidproquo-deploy-terraform) — generates Terraform that calls a DevOps-owned module library from a `qpq.config.json` artifact. See [docs/devops-handoff.md](docs/devops-handoff.md).
 - [quidproquo-deploy-webpack](https://www.npmjs.com/package/quidproquo-deploy-webpack)
 - [quidproquo-actionprocessor-awslambda](https://www.npmjs.com/package/quidproquo-actionprocessor-awslambda)
 - [quidproquo-actionprocessor-node](https://www.npmjs.com/package/quidproquo-actionprocessor-node)
+
+## Deployment
+
+QPQ apps can be deployed two ways:
+
+- **AWS CDK** (today) — `quidproquo-deploy-awscdk` synthesises CloudFormation from
+  TypeScript. App teams own the deploy.
+- **Terraform** (new, under construction) — `quidproquo-deploy-terraform`
+  dumps a `qpq.config.json` artifact that DevOps consumes. The generator emits
+  only `module` calls against a versioned, DevOps-owned module library, so
+  compliance / security changes live in the modules — not in app code.
+  Start here: [docs/devops-handoff.md](docs/devops-handoff.md).
 
 ### Note
 
