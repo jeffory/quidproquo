@@ -13,7 +13,7 @@ import {
 
 import { randomUUID } from 'crypto';
 
-import { getDevServerActionProcessors } from '../actionProcessor';
+import { getDevServerActionProcessors, getExpressApiEventEventProcessor } from '../actionProcessor';
 import { getDevServerLogger } from '../implementations/logger';
 import { ResolvedDevServerConfig } from '../types';
 

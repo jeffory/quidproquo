@@ -5,7 +5,6 @@ import { defineRoute, GenericRouteOptions } from '../../../config/settings/route
 import { getServiceEntryQpqFunctionRuntime } from '../../getServiceEntryQpqFunctionRuntime';
 
 export const defineAdminServiceLogLogRoute = (
-  apiName: string,
   method: HTTPMethod,
   urlPath: string,
   methodName: string,
@@ -13,5 +12,5 @@ export const defineAdminServiceLogLogRoute = (
 ) => {
   const qpqRuntime = getServiceEntryQpqFunctionRuntime('log', 'controller', `logLogController::${methodName}`);
 
-  return defineRoute(apiName, method, urlPath, qpqRuntime, options);
+  return defineRoute(method, urlPath, qpqRuntime, options);
 };

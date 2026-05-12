@@ -13,8 +13,8 @@ import { qpqWebServerUtils, RouteQPQWebServerConfigSetting } from 'quidproquo-we
 
 import { EventInput, InternalEventRecord, MatchResult } from './types';
 
-const getProcessMatchStory = (apiName: string, qpqConfig: QPQConfig): EventMatchStoryActionProcessor<InternalEventRecord, MatchResult, EventInput> => {
-  const routes: RouteQPQWebServerConfigSetting[] = qpqWebServerUtils.getAllRoutesForApi(apiName, qpqConfig);
+const getProcessMatchStory = (qpqConfig: QPQConfig): EventMatchStoryActionProcessor<InternalEventRecord, MatchResult, EventInput> => {
+  const routes: RouteQPQWebServerConfigSetting[] = qpqWebServerUtils.getAllRoutes(qpqConfig);
 
   return async ({ qpqEventRecord }) => {
     // Sort the routes by string length
@@ -46,12 +46,12 @@ const getProcessMatchStory = (apiName: string, qpqConfig: QPQConfig): EventMatch
       runtime: matchedRoute.route.runtime,
       runtimeOptions: matchedRoute.match.params || {},
 
-      config: qpqWebServerUtils.mergeAllRouteOptions(apiName, matchedRoute.route, qpqConfig),
+      // TODO: Make this aware of the API that we are eventing
+      config: qpqWebServerUtils.mergeAllRouteOptions('api', matchedRoute.route, qpqConfig),
     });
   };
 };
 
-export const getEventMatchStoryActionProcessor = (apiName: string): ActionProcessorListResolver =>
-  async (qpqConfig: QPQConfig): Promise<ActionProcessorList> => ({
-    [EventActionType.MatchStory]: getProcessMatchStory(apiName, qpqConfig),
-  });
+export const getEventMatchStoryActionProcessor: ActionProcessorListResolver = async (qpqConfig: QPQConfig): Promise<ActionProcessorList> => ({
+  [EventActionType.MatchStory]: getProcessMatchStory(qpqConfig),
+});

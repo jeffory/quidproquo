@@ -36,10 +36,6 @@ export class ApiQpqWebserverApiConstruct extends QpqConstructBlock {
       role: this.getServiceRole(),
 
       vpc,
-
-      environment: {
-        QPQ_API_NAME: props.apiConfig.apiName,
-      },
     });
 
     // Create a rest api
