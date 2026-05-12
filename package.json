@@ -60,6 +60,7 @@
     "quidproquo-neo4j",
     "quidproquo-deploy-webpack",
     "quidproquo-deploy-awscdk",
+    "quidproquo-deploy-terraform",
     "quidproquo-web",
     "quidproquo-actionprocessor-web",
     "quidproquo-web-react",
