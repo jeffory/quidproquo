@@ -7,6 +7,19 @@ const sidebars: SidebarsConfig = {
     'core-concepts',
     'use-cases',
     'architecture-overview',
+    {
+      type: 'category',
+      label: 'Tutorials',
+      items: [
+        'tutorials/rest-api',
+        'tutorials/file-storage',
+        'tutorials/user-authentication',
+        'tutorials/websockets',
+        'tutorials/queue-processing',
+        'tutorials/scheduled-tasks',
+        'tutorials/graph-database',
+      ],
+    },
   ],
   
   apiSidebar: [
