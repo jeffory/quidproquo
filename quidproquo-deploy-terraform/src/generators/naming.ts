@@ -30,21 +30,20 @@ export interface NamingContext {
   feature?: string;
 }
 
-const namingContextFromResolved = (resolved: ResolvedSynthContext): NamingContext => ({
-  applicationName: resolved.applicationName,
-  moduleName: resolved.moduleName,
-  environment: resolved.environment,
+const namingContextFromResolved = (resolved: ResolvedSynthContext): NamingContext => {
   // `feature` is not yet surfaced on ResolvedSynthContext (HOM-24); fall
   // back to the appName setting's `feature` field when it appears there.
-  feature:
-    typeof (resolved.config.settings.find(
-      (s) => s.configSettingType === '@quidproquo-core/config/AppName',
-    )?.feature) === 'string'
-      ? ((resolved.config.settings.find(
-          (s) => s.configSettingType === '@quidproquo-core/config/AppName',
-        ) as { feature?: string }).feature)
-      : undefined,
-});
+  const appNameSetting = resolved.config.settings.find(
+    (s) => s.configSettingType === '@quidproquo-core/config/AppName',
+  ) as { feature?: string } | undefined;
+
+  return {
+    applicationName: resolved.applicationName,
+    moduleName: resolved.moduleName,
+    environment: resolved.environment,
+    feature: typeof appNameSetting?.feature === 'string' ? appNameSetting.feature : undefined,
+  };
+};
 
 /** `<name>-<application>-<service>-<environment>[-<feature>]`. */
 export const getConfigRuntimeResourceName = (
