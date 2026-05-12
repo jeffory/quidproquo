@@ -19,6 +19,7 @@ import { secretGenerator } from './secret';
 import { storageDriveGenerator } from './storageDrive';
 import { ResourceGenerator } from './types';
 import { userDirectoryGenerator } from './userDirectory';
+import { WEBSERVER_RESOURCE_GENERATORS } from './webserver';
 
 /** All core generators registered by HOM-57. */
 export const CORE_RESOURCE_GENERATORS: readonly ResourceGenerator[] = [
@@ -32,6 +33,17 @@ export const CORE_RESOURCE_GENERATORS: readonly ResourceGenerator[] = [
   graphDatabaseGenerator,
   notifyErrorGenerator,
   awsAlarmGenerator,
+];
+
+/**
+ * Core + webserver generators, in a single dispatch-ready list. The synth
+ * pipeline (HOM-59) feeds this into {@link buildResourceGeneratorRegistry}
+ * to walk a full `qpq.config.json` without having to know about the
+ * core/webserver split.
+ */
+export const ALL_RESOURCE_GENERATORS: readonly ResourceGenerator[] = [
+  ...CORE_RESOURCE_GENERATORS,
+  ...WEBSERVER_RESOURCE_GENERATORS,
 ];
 
 /**

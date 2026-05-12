@@ -13,3 +13,5 @@ export * from './secret';
 export * from './storageDrive';
 export * from './types';
 export * from './userDirectory';
+export * as webserver from './webserver';
+export { WEBSERVER_RESOURCE_GENERATORS } from './webserver';
