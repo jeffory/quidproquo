@@ -79,6 +79,12 @@ const config: Config = {
           label: 'API Reference',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'packagesSidebar',
+          position: 'left',
+          label: 'Packages',
+        },
+        {
           href: 'https://github.com/quidproquo/quidproquo',
           label: 'GitHub',
           position: 'right',
@@ -102,6 +108,10 @@ const config: Config = {
             {
               label: 'API Reference',
               to: '/api',
+            },
+            {
+              label: 'Packages',
+              to: '/packages',
             },
           ],
         },

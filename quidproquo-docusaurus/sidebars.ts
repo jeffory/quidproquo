@@ -37,6 +37,19 @@ const sidebars: SidebarsConfig = {
       ],
     },
   ],
+
+  packagesSidebar: [
+    'packages/index',
+    'packages/quidproquo-webserver',
+    'packages/quidproquo-web',
+    'packages/quidproquo-web-react',
+    'packages/quidproquo-deploy-awscdk',
+    'packages/quidproquo-deploy-webpack',
+    'packages/quidproquo-dev-server',
+    'packages/quidproquo-testing',
+    'packages/quidproquo-actionprocessors',
+    'packages/quidproquo-config-aws',
+  ],
 };
 
 export default sidebars;
