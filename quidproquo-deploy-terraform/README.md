@@ -9,10 +9,11 @@ compliance, security, and rollout from there.
 
 ## WARNING: NOT FOR PRODUCTION
 
-This package is in the scaffolding stage. The CLI exists, but only the
-`synth` subcommand will gain a real implementation in the immediately
-following tickets; `plan`, `apply`, and `destroy` currently exit with a
-`TODO`. Do not depend on it for real deployments yet.
+This package is in the scaffolding stage. The `synth` subcommand loads and
+validates a QPQ JSON config and writes the per-environment output directory,
+but does not yet emit `.tf` files — those land in HOM-57 and friends.
+`plan`, `apply`, and `destroy` currently exit with a `TODO`. Do not depend
+on it for real deployments yet.
 
 ## CLI
 
@@ -31,6 +32,19 @@ Commands:
 Options:
   -h, --help     Show help
 ```
+
+### `qpq-terraform synth`
+
+```
+qpq-terraform synth --config <path> --outdir <path> --env <name> [--app <name>] [--module <name>]
+```
+
+Reads the QPQ config JSON (the file produced by `qpqCoreUtils.flattenQpqConfig`),
+validates its top-level shape, looks up the application/module name and AWS
+account/region, and creates `<outdir>/<env>/` containing a
+`qpq-synth.manifest.json` describing the resolved synth context. Returns a
+non-zero exit code with a descriptive stderr message on any validation
+failure.
 
 ## Programmatic API
 
