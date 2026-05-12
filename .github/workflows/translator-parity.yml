@@ -1,0 +1,180 @@
+name: translator-parity
+
+on:
+  pull_request:
+    branches: [main, develop, feature/terraform-converter]
+  push:
+    branches: [main, develop, feature/terraform-converter]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  build-and-fixture:
+    name: Build & Fixture
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build
+
+      - name: Compile fixture
+        run: |
+          cd quidproquo-deploy-terraform/examples/minimal-app
+          npx tsc --noEmit -p tsconfig.json
+
+      - name: Dump QPQ config
+        run: |
+          cd quidproquo-deploy-terraform/examples/minimal-app
+          npx tsx bin/config-dump.ts /tmp/qpq.config.json
+          test -f /tmp/qpq.config.json
+
+      - name: CDK synth fixture
+        run: |
+          cd quidproquo-deploy-terraform/examples/minimal-app
+          npx tsx bin/cdk-synth.ts
+          test -d cdk.out
+
+      - name: Upload CDK output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdk-out
+          path: quidproquo-deploy-terraform/examples/minimal-app/cdk.out
+
+  lint-terraform-modules:
+    name: Lint Terraform modules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.0'
+
+      - name: Terraform fmt check
+        run: |
+          find tf-modules -name '*.tf' -exec terraform fmt -check {} +
+
+      - name: Terraform validate modules
+        run: |
+          for d in tf-modules/*/; do
+            echo "Validating $d"
+            cd "$d"
+            terraform init -backend=false
+            terraform validate
+            cd -
+          done
+
+  parity-baseline:
+    name: Parity baseline (CDK)
+    runs-on: ubuntu-latest
+    needs: [build-and-fixture]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build
+
+      - name: Download CDK output
+        uses: actions/download-artifact@v4
+        with:
+          name: cdk-out
+          path: quidproquo-deploy-terraform/examples/minimal-app/cdk.out
+
+      - name: Run parity diff (CDK baseline)
+        run: |
+          cd quidproquo-deploy-terraform
+          npx tsx src/test/parity/index.ts \
+            --cdk-out=examples/minimal-app/cdk.out \
+            --expected=src/test/parity/expected-diffs.json \
+            --baseline=cdk \
+            --output=/tmp/parity-report.json
+
+      - name: Upload parity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-report
+          path: /tmp/parity-report.json
+
+  parity-full:
+    name: Parity full diff
+    runs-on: ubuntu-latest
+    needs: [build-and-fixture, lint-terraform-modules]
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-full-parity')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.0'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace packages
+        run: npm run build
+
+      - name: Download CDK output
+        uses: actions/download-artifact@v4
+        with:
+          name: cdk-out
+          path: quidproquo-deploy-terraform/examples/minimal-app/cdk.out
+
+      - name: qpq-config dump & qpq-terraform synth
+        run: |
+          cd quidproquo-deploy-terraform/examples/minimal-app
+          npx tsx bin/config-dump.ts qpq.config.json
+          npx qpq-terraform synth --config=qpq.config.json --out=tf-out
+
+      - name: terraform init & plan
+        run: |
+          cd quidproquo-deploy-terraform/examples/minimal-app/tf-out/dev
+          terraform init
+          terraform plan -out=plan.tfplan
+          terraform show -json plan.tfplan > /tmp/terraform-plan.json
+
+      - name: Run parity diff (full)
+        run: |
+          cd quidproquo-deploy-terraform
+          npx tsx src/test/parity/index.ts \
+            --cdk-out=examples/minimal-app/cdk.out \
+            --tf-plan=/tmp/terraform-plan.json \
+            --expected=src/test/parity/expected-diffs.json \
+            --output=/tmp/parity-report.json
+
+      - name: Upload parity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-report-full
+          path: /tmp/parity-report.json

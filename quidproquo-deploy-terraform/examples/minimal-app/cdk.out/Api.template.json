@@ -1,0 +1,502 @@
+{
+ "Resources": {
+  "ApiapiapifunctionLogGroup11F33E1A": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "Apiapiapifunction042D467B": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
+     "S3Key": "c90045e97c6ea4cb3350768e67e933712ac3cbe022786538f24ee5810834df09.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+     }
+    },
+    "FunctionName": "api-route-minimal-app-main-dev",
+    "Handler": "index.apiGatewayEventHandler",
+    "LoggingConfig": {
+     "LogGroup": {
+      "Ref": "ApiapiapifunctionLogGroup11F33E1A"
+     }
+    },
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::000000000000:role/service-role-minimal-app-main-dev"
+      ]
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 25
+   }
+  },
+  "ApiapilambdarestapiBE7A63B6": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "BinaryMediaTypes": [
+     "*/*"
+    ],
+    "EndpointConfiguration": {
+     "Types": [
+      "REGIONAL"
+     ]
+    },
+    "Name": "api-rest-api-minimal-app-main-dev"
+   }
+  },
+  "ApiapilambdarestapiDeploymentEF471B3160a66a8b70a8cdd9b926ecdd517abad1": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "Automatically created by the RestApi construct",
+    "RestApiId": {
+     "Ref": "ApiapilambdarestapiBE7A63B6"
+    }
+   },
+   "DependsOn": [
+    "ApiapilambdarestapiproxyANY6322E475",
+    "Apiapilambdarestapiproxy6B91FC8E",
+    "ApiapilambdarestapiANYEBE7629A"
+   ],
+   "Metadata": {
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "ApiapilambdarestapiDeploymentStageprodEB908C2B": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "ApiapilambdarestapiDeploymentEF471B3160a66a8b70a8cdd9b926ecdd517abad1"
+    },
+    "RestApiId": {
+     "Ref": "ApiapilambdarestapiBE7A63B6"
+    },
+    "StageName": "prod"
+   }
+  },
+  "Apiapilambdarestapiproxy6B91FC8E": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "ApiapilambdarestapiBE7A63B6",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "{proxy+}",
+    "RestApiId": {
+     "Ref": "ApiapilambdarestapiBE7A63B6"
+    }
+   }
+  },
+  "ApiapilambdarestapiproxyANYApiPermissionApiApiapilambdarestapiD095CE47ANYproxy2CD5C548": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Apiapiapifunction042D467B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:000000000000:",
+       {
+        "Ref": "ApiapilambdarestapiBE7A63B6"
+       },
+       "/",
+       {
+        "Ref": "ApiapilambdarestapiDeploymentStageprodEB908C2B"
+       },
+       "/*/*"
+      ]
+     ]
+    }
+   }
+  },
+  "ApiapilambdarestapiproxyANYApiPermissionTestApiApiapilambdarestapiD095CE47ANYproxy93C538F7": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Apiapiapifunction042D467B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:000000000000:",
+       {
+        "Ref": "ApiapilambdarestapiBE7A63B6"
+       },
+       "/test-invoke-stage/*/*"
+      ]
+     ]
+    }
+   }
+  },
+  "ApiapilambdarestapiproxyANY6322E475": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "ANY",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "Apiapiapifunction042D467B",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "Apiapilambdarestapiproxy6B91FC8E"
+    },
+    "RestApiId": {
+     "Ref": "ApiapilambdarestapiBE7A63B6"
+    }
+   }
+  },
+  "ApiapilambdarestapiANYApiPermissionApiApiapilambdarestapiD095CE47ANY4DDE94A3": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Apiapiapifunction042D467B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:000000000000:",
+       {
+        "Ref": "ApiapilambdarestapiBE7A63B6"
+       },
+       "/",
+       {
+        "Ref": "ApiapilambdarestapiDeploymentStageprodEB908C2B"
+       },
+       "/*/"
+      ]
+     ]
+    }
+   }
+  },
+  "ApiapilambdarestapiANYApiPermissionTestApiApiapilambdarestapiD095CE47ANY0E136B82": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "Apiapiapifunction042D467B",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:000000000000:",
+       {
+        "Ref": "ApiapilambdarestapiBE7A63B6"
+       },
+       "/test-invoke-stage/*/"
+      ]
+     ]
+    }
+   }
+  },
+  "ApiapilambdarestapiANYEBE7629A": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "ANY",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "Apiapiapifunction042D467B",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "ApiapilambdarestapiBE7A63B6",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "ApiapilambdarestapiBE7A63B6"
+    }
+   }
+  },
+  "ApiapibpmBB088DE9": {
+   "Type": "AWS::ApiGateway::BasePathMapping",
+   "Properties": {
+    "BasePath": "main",
+    "DomainName": "api.dev.example.com",
+    "RestApiId": {
+     "Ref": "ApiapilambdarestapiBE7A63B6"
+    },
+    "Stage": {
+     "Ref": "ApiapilambdarestapiDeploymentStageprodEB908C2B"
+    }
+   }
+  },
+  "QueueprocessqueueservicerolePolicyD6B9DEC2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:sqs:us-east-1:000000000000:process-queue-minimal-app-main-dev"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "QueueprocessqueueservicerolePolicyD6B9DEC2",
+    "Roles": [
+     "service-role-minimal-app-main-dev"
+    ]
+   }
+  },
+  "QueueprocessqueueLogGroup2CF69575": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "Queueprocessqueuefunction2505BFD3": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
+     "S3Key": "c90045e97c6ea4cb3350768e67e933712ac3cbe022786538f24ee5810834df09.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+      "queueQPQConfigSetting": "{\"configSettingType\":\"@quidproquo-core/config/Queue\",\"uniqueKey\":\"process-queue\",\"name\":\"process-queue\",\"batchSize\":0,\"batchWindowInSeconds\":5,\"concurrency\":1,\"maxTries\":3,\"ttRetryInSeconds\":300,\"hasDeadLetterQueue\":true,\"qpqQueueProcessors\":{\"default\":{\"basePath\":\"/home/keith/multica_workspaces/9efcc50c-65d4-4c2e-949f-41739f3252b7/522c03bf/workdir/quidproquo/quidproquo-deploy-terraform/examples/minimal-app/src\",\"relativePath\":\"/handlers/queueHandler::handler\",\"functionName\":\"handler\"}},\"eventBusSubscriptions\":[]}"
+     }
+    },
+    "FunctionName": "process-queue-queue-minimal-app-main-dev",
+    "Handler": "index.sqsEvent_queueEvent",
+    "LoggingConfig": {
+     "LogGroup": {
+      "Ref": "QueueprocessqueueLogGroup2CF69575"
+     }
+    },
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::000000000000:role/service-role-minimal-app-main-dev"
+      ]
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "QueueprocessqueueservicerolePolicyD6B9DEC2"
+   ]
+  },
+  "QueueprocessqueuefunctionSqsEventSourceApiQueueprocessqueuequeueprocessqueue9CD16F67A15962F1": {
+   "Type": "AWS::Lambda::EventSourceMapping",
+   "Properties": {
+    "EventSourceArn": "arn:aws:sqs:us-east-1:000000000000:process-queue-minimal-app-main-dev",
+    "FunctionName": {
+     "Ref": "Queueprocessqueuefunction2505BFD3"
+    }
+   }
+  },
+  "ServiceFunctionsampleservicefunctionapifunctionLogGroupB0B753F4": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "ServiceFunctionsampleservicefunctionapifunction69BA07E6": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
+     "S3Key": "c90045e97c6ea4cb3350768e67e933712ac3cbe022786538f24ee5810834df09.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+     }
+    },
+    "FunctionName": "sample-service-function-sfunc-minimal-app-main-dev",
+    "Handler": "index.anyExecuteServiceFunctionEvent_serviceFunction",
+    "LoggingConfig": {
+     "LogGroup": {
+      "Ref": "ServiceFunctionsampleservicefunctionapifunctionLogGroupB0B753F4"
+     }
+    },
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::000000000000:role/service-role-minimal-app-main-dev"
+      ]
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 870
+   }
+  }
+ },
+ "Outputs": {
+  "ApiapilambdarestapiEndpoint19943F0E": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "ApiapilambdarestapiBE7A63B6"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "ApiapilambdarestapiDeploymentStageprodEB908C2B"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

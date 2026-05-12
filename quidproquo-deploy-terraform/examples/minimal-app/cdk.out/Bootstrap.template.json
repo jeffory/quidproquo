@@ -1,0 +1,144 @@
+{
+ "Resources": {
+  "LambdaWarmerWarmLambdaRuleA782EE0F": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Name": "WarmLambdas-minimal-app-dev",
+    "ScheduleExpression": "rate(5 minutes)",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "LambdaWarmerMyTopic49997326"
+      },
+      "Id": "Target0",
+      "Input": "{\"type\":\"QpqLambdaWarmerEvent\"}"
+     }
+    ]
+   }
+  },
+  "LambdaWarmerMyTopic49997326": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "Warm Lambdas",
+    "TopicName": "WarmLambdas-minimal-app-dev"
+   }
+  },
+  "LambdaWarmerMyTopicPolicy7FAE9976": {
+   "Type": "AWS::SNS::TopicPolicy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sns:Publish",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       },
+       "Resource": {
+        "Ref": "LambdaWarmerMyTopic49997326"
+       },
+       "Sid": "0"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Topics": [
+     {
+      "Ref": "LambdaWarmerMyTopic49997326"
+     }
+    ]
+   }
+  },
+  "ApiapisubdomaincertificateDFB9E064": {
+   "Type": "AWS::CertificateManager::Certificate",
+   "Properties": {
+    "DomainName": "api.dev.example.com",
+    "DomainValidationOptions": [
+     {
+      "DomainName": "api.dev.example.com",
+      "HostedZoneId": "DUMMY"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "api.dev.example.com-cert"
+     }
+    ],
+    "ValidationMethod": "DNS"
+   }
+  },
+  "ApiapisubdomaindomainnameB433F348": {
+   "Type": "AWS::ApiGateway::DomainName",
+   "Properties": {
+    "DomainName": "api.dev.example.com",
+    "EndpointConfiguration": {
+     "Types": [
+      "REGIONAL"
+     ]
+    },
+    "RegionalCertificateArn": {
+     "Ref": "ApiapisubdomaincertificateDFB9E064"
+    },
+    "SecurityPolicy": "TLS_1_2"
+   }
+  },
+  "Apiapisubdomainarecord6AC9303C": {
+   "Type": "AWS::Route53::RecordSet",
+   "Properties": {
+    "AliasTarget": {
+     "DNSName": {
+      "Fn::GetAtt": [
+       "ApiapisubdomaindomainnameB433F348",
+       "RegionalDomainName"
+      ]
+     },
+     "HostedZoneId": {
+      "Fn::GetAtt": [
+       "ApiapisubdomaindomainnameB433F348",
+       "RegionalHostedZoneId"
+      ]
+     }
+    },
+    "HostedZoneId": "DUMMY",
+    "Name": "api.dev.example.com.",
+    "Type": "A"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

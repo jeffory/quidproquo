@@ -68,7 +68,8 @@
     "quidproquo-web-admin",
     "quidproquo-testing",
     "quidproquo-dev-server",
-    "quidproquo"
+    "quidproquo",
+    "quidproquo-deploy-terraform/examples/minimal-app"
   ],
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",

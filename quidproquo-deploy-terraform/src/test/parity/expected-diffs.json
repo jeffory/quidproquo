@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "description": "Expected differences between CDK and Terraform deployments for the minimal fixture. These are documented, intentional divergences arising from architectural decisions in the Terraform translation layer.",
+  "allowedMissingInTerraform": [
+    {
+      "awsType": "AWS::IAM::Policy",
+      "qpqLogicalName": "webserver-roll-role-default-policy",
+      "reason": "Terraform modules encapsulate IAM policies inside module bodies rather than emitting discrete aws_iam_policy resources. The IAM permissions are still created but are not visible as top-level plan resources."
+    },
+    {
+      "awsType": "AWS::Lambda::Permission",
+      "qpqLogicalName": "api",
+      "reason": "API Gateway Lambda permissions in Terraform are handled via the aws_lambda_permission resource inside the api module. The current tf-modules/api module may not yet emit these; tracked in HOM-21."
+    },
+    {
+      "awsType": "AWS::ApiGateway::Resource",
+      "qpqLogicalName": "api",
+      "reason": "The Terraform api module uses a proxy integration which may not emit a discrete aws_apigateway_resource for the proxy path."
+    },
+    {
+      "awsType": "AWS::ApiGateway::Method",
+      "qpqLogicalName": "api",
+      "reason": "Method resources may be folded into the aws_api_gateway_integration inside the Terraform api module."
+    },
+    {
+      "awsType": "AWS::ApiGateway::Deployment",
+      "qpqLogicalName": "api",
+      "reason": "Terraform aws_api_gateway_rest_api handles deployment implicitly or via a separate deployment resource that may use a different naming pattern."
+    },
+    {
+      "awsType": "AWS::ApiGateway::Stage",
+      "qpqLogicalName": "api",
+      "reason": "Stage may be managed implicitly by the Terraform api module rather than as a discrete resource."
+    },
+    {
+      "awsType": "AWS::S3::BucketPolicy",
+      "qpqLogicalName": "assets",
+      "reason": "The Terraform storage-drive module may inline the bucket policy inside the aws_s3_bucket resource rather than emitting a separate aws_s3_bucket_policy."
+    },
+    {
+      "awsType": "AWS::SQS::QueuePolicy",
+      "qpqLogicalName": "process-queue",
+      "reason": "Queue policy may be inlined inside the aws_sqs_queue resource in the Terraform queue module."
+    },
+    {
+      "awsType": "AWS::Events::Rule",
+      "qpqLogicalName": "lambda-warmer",
+      "reason": "Lambda warming is controlled by the disableLambdaWarming flag in the fixture. CDK still emits the warmer rule because the construct is unconditional in BootstrapQpqServiceStack; Terraform may omit it when disabled."
+    },
+    {
+      "awsType": "AWS::SNS::Topic",
+      "qpqLogicalName": "lambda-warmer",
+      "reason": "Same as above — Terraform bootstrap module may skip SNS warmer topic when lambda warming is disabled."
+    },
+    {
+      "awsType": "AWS::SNS::TopicPolicy",
+      "qpqLogicalName": "lambda-warmer",
+      "reason": "Same as above — Terraform bootstrap module may skip SNS warmer topic policy when lambda warming is disabled."
+    },
+    {
+      "awsType": "AWS::IAM::Role",
+      "qpqLogicalName": "custom-s3-auto-delete-objects",
+      "reason": "CDK uses a custom resource provider for S3 auto-delete. Terraform storage-drive module handles bucket cleanup via lifecycle rules or force_destroy, eliminating the need for the custom resource and its IAM role."
+    },
+    {
+      "awsType": "AWS::Lambda::Function",
+      "qpqLogicalName": "custom-s3-auto-delete-objects",
+      "reason": "Same as above — Terraform does not need the S3 auto-delete custom resource Lambda function."
+    },
+    {
+      "awsType": "AWS::IAM::Policy",
+      "qpqLogicalName": "queue-process-queue-service-role-policy",
+      "reason": "Terraform queue module may inline the IAM policy for the queue Lambda inside the module rather than emitting a discrete policy resource."
+    }
+  ],
+  "allowedMissingInCdk": [
+    {
+      "awsType": "AWS::S3::BucketPublicAccessBlock",
+      "qpqLogicalName": "assets",
+      "reason": "Terraform storage-drive module may emit a separate aws_s3_bucket_public_access_block resource for compliance, while CDK inlines this inside the bucket properties."
+    }
+  ],
+  "allowedPropertyDiffs": [
+    {
+      "awsType": "AWS::Lambda::Function",
+      "qpqLogicalName": "api",
+      "propertyPath": "Handler",
+      "reason": "CDK uses apiGatewayEventHandler as the handler name; Terraform service-function module may use a different entry-point wrapper."
+    },
+    {
+      "awsType": "AWS::Lambda::Function",
+      "qpqLogicalName": "sample-service-function",
+      "propertyPath": "Handler",
+      "reason": "CDK uses anyExecuteServiceFunctionEvent_serviceFunction as the handler name; Terraform module may use a different wrapper."
+    },
+    {
+      "awsType": "AWS::Lambda::Function",
+      "qpqLogicalName": "process-queue",
+      "propertyPath": "Handler",
+      "reason": "CDK uses sqsEvent_queueEvent as the handler name; Terraform module may use a different wrapper."
+    },
+    {
+      "awsType": "AWS::DynamoDB::Table",
+      "qpqLogicalName": "items",
+      "propertyPath": "TableName",
+      "reason": "CDK logical ID hash suffix vs Terraform module naming may differ slightly in the suffix format, but both follow the QPQ naming convention."
+    },
+    {
+      "awsType": "AWS::S3::Bucket",
+      "qpqLogicalName": "assets",
+      "propertyPath": "BucketName",
+      "reason": "Same as above — naming suffix format may differ between CDK and Terraform while both follow QPQ convention."
+    }
+  ]
+}
