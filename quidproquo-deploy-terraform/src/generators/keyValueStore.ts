@@ -7,7 +7,7 @@
  * controls and let the module's defaults provide the compliance baseline.
  */
 
-import { attrs, expr, list, moduleBlock, obj, ref, str } from '../hcl';
+import { attrs, expr, list, moduleBlock, obj, str } from '../hcl';
 import { QpqConfigSettingJson } from '../synth/types';
 import { buildModuleLabel, resolveQpqRuntimeResourceName } from './naming';
 import { GeneratedResource, GeneratorContext, ResourceGenerator } from './types';
@@ -140,9 +140,6 @@ export const keyValueStoreGenerator: ResourceGenerator = {
       source: ctx.moduleSource(MODULE_LOGICAL_NAME),
       attributes: moduleAttributes,
     });
-
-    // Suppress unused-import warning when no GSI/attributes path is taken.
-    void ref;
 
     return [{ stack: 'inf', blocks: [block] }];
   },
