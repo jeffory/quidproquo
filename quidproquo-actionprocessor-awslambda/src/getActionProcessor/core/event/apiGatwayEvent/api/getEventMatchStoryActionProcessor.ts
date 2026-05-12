@@ -14,7 +14,8 @@ import { matchUrl } from '../../../../../awsLambdaUtils';
 import { EventInput, InternalEventRecord, MatchResult } from './types';
 
 const getProcessMatchStory = (qpqConfig: QPQConfig): EventMatchStoryActionProcessor<InternalEventRecord, MatchResult, EventInput> => {
-  const routes: RouteQPQWebServerConfigSetting[] = qpqWebServerUtils.getAllRoutes(qpqConfig);
+  const apiName = process.env.QPQ_API_NAME || '';
+  const routes: RouteQPQWebServerConfigSetting[] = qpqWebServerUtils.getAllRoutesForApi(apiName, qpqConfig);
 
   return async ({ qpqEventRecord }) => {
     // Sort the routes by string length
@@ -44,8 +45,7 @@ const getProcessMatchStory = (qpqConfig: QPQConfig): EventMatchStoryActionProces
       runtime: matchedRoute.route.runtime,
       runtimeOptions: matchedRoute.match.params || {},
 
-      // TODO: Make this aware of the API that we are eventing
-      config: qpqWebServerUtils.mergeAllRouteOptions('api', matchedRoute.route, qpqConfig),
+      config: qpqWebServerUtils.mergeAllRouteOptions(apiName, matchedRoute.route, qpqConfig),
     };
 
     return actionResult(matchResult);

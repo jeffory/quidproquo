@@ -147,7 +147,7 @@ export const apiImplementation = async (devServerConfig: ResolvedDevServerConfig
         event,
         apiConfig.qpqConfig,
         getDynamicModuleLoader(apiConfig.qpqConfig, devServerConfig),
-        getExpressApiEventEventProcessor,
+        getExpressApiEventEventProcessor(apiConfig.apiName),
         QpqRuntimeType.API,
         () => ({
           depth: 0,

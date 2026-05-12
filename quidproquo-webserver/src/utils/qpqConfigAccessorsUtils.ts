@@ -24,9 +24,7 @@ export const getAllRoutes = (qpqConfig: QPQConfig): RouteQPQWebServerConfigSetti
 };
 
 export const getAllRoutesForApi = (apiName: string, qpqConfig: QPQConfig): RouteQPQWebServerConfigSetting[] => {
-  const routes = getAllRoutes(qpqConfig);
-
-  return routes;
+  return getAllRoutes(qpqConfig).filter((r) => r.apiName === apiName);
 };
 
 export const getAllApiKeyConfigs = (qpqConfig: QPQConfig): ApiKeyQPQWebServerConfigSetting[] => {

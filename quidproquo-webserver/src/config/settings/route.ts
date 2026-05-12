@@ -44,6 +44,7 @@ export type RouteAuthSettings = GenericRouteAuthSettings<ApiKeyReference>;
 export type RouteOptions = GenericRouteOptions<ApiKeyReference>;
 
 export interface RouteQPQWebServerConfigSetting extends QPQConfigSetting {
+  apiName: string;
   method: HTTPMethod;
   path: string;
   runtime: QpqFunctionRuntime;
@@ -51,6 +52,7 @@ export interface RouteQPQWebServerConfigSetting extends QPQConfigSetting {
 }
 
 export const defineRoute = (
+  apiName: string,
   method: HTTPMethod,
   path: string,
   runtime: QpqFunctionRuntime,
@@ -70,6 +72,7 @@ export const defineRoute = (
     configSettingType: QPQWebServerConfigSettingType.Route,
     uniqueKey: getUniqueKeyFromQpqFunctionRuntime(runtime),
 
+    apiName,
     method,
     path,
     runtime,
