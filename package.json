@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "link": "npm exec --ws -- npm link",
-    "build": "npm run build --ws",
+    "build": "npm run build --ws --if-present",
     "clean": "npm run clean --ws",
     "login": "npm login",
     "publish": "npm publish --ws",
