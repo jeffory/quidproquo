@@ -5,6 +5,7 @@ const sidebars: SidebarsConfig = {
     'index',
     'getting-started',
     'core-concepts',
+    'developer-concepts',
     'use-cases',
     'architecture-overview',
     {
