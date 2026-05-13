@@ -7,9 +7,7 @@ import {
 } from 'quidproquo-deploy-awscdk';
 import { getMinimalAppConfig } from '../src/qpqConfig.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.resolve(__dirname, '../cdk.out');
 
 const app = new cdk.App({ outdir: outDir });
