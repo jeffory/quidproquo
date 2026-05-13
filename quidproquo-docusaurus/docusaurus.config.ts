@@ -32,7 +32,22 @@ const config: Config = {
     mermaid: true,
   },
 
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: [
+    '@docusaurus/theme-mermaid',
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        hashed: true,
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+        docsRouteBasePath: '/',
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+        language: ['en'],
+      },
+    ],
+  ],
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
