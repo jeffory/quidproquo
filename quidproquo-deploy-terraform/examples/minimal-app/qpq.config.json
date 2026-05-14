@@ -1,0 +1,30 @@
+{
+  "qpqConfigVersion": 1,
+  "exportedAt": "2026-05-14T00:00:00.000Z",
+  "settings": [
+    {
+      "configSettingType": "@quidproquo-core/config/AppName",
+      "uniqueKey": "minimal-app",
+      "applicationName": "minimal-app",
+      "configRoot": "/config",
+      "environment": "dev"
+    },
+    {
+      "configSettingType": "@quidproquo-core/config/moduleName",
+      "uniqueKey": "core",
+      "moduleName": "core"
+    },
+    {
+      "configSettingType": "@quidproquo-core/config/EnvironmentSettings",
+      "uniqueKey": "dev",
+      "environment": "dev",
+      "settings": []
+    },
+    {
+      "configSettingType": "@quidproquo-core/config/EnvironmentSettings",
+      "uniqueKey": "prod",
+      "environment": "prod",
+      "settings": []
+    }
+  ]
+}

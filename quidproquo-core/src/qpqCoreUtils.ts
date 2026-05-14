@@ -47,24 +47,19 @@ import { isQpqFunctionRuntimeAbsolutePath } from './utils';
  * @param {QPQConfig} qpqConfig - The input QPQConfig array to be flattened.
  * @returns {QPQConfigSetting[]} - The flattened array of QPQConfigSetting objects
  */
-export const flattenQpqConfig = (qpqConfig: QPQConfig): QPQConfigSetting[] => {
-  let environment = 'development';
+export const flattenQpqConfig = (qpqConfig: QPQConfig, envOverride?: string): QPQConfigSetting[] => {
+  let environment = envOverride ?? 'development';
 
-  /**
-   * A recursive helper function that flattens an array of QPQConfigItem objects.
-   * @function
-   * @param {QPQConfigItem[]} configItems - An array of QPQConfigItem objects to be flattened.
-   * @param {QPQConfigSetting[]} accumulator - An accumulator array for storing the flattened QPQConfigSetting objects.
-   * @returns {QPQConfigSetting[]} - The flattened array of QPQConfigSetting objects.
-   */
   const flatten = (configItems: QPQConfigItem[], accumulator: QPQConfigSetting[] = []): QPQConfigSetting[] => {
     return configItems.reduce<QPQConfigSetting[]>((acc, item) => {
       if (Array.isArray(item)) {
         return flatten(item, acc);
       } else {
-        // If its a appName config item, update the environment variable
+        // If its a appName config item, update the environment variable (unless overridden)
         if (item.configSettingType === QPQCoreConfigSettingType.appName) {
-          environment = (item as ApplicationQPQConfigSetting).environment || 'development';
+          if (!envOverride) {
+            environment = (item as ApplicationQPQConfigSetting).environment || 'development';
+          }
         }
 
         // Otherwise if its an environmentSettings config item, flatten out the child settings
@@ -82,6 +77,25 @@ export const flattenQpqConfig = (qpqConfig: QPQConfig): QPQConfigSetting[] => {
   };
 
   return flatten(qpqConfig);
+};
+
+export const getDefinedEnvironments = (qpqConfig: QPQConfig): string[] => {
+  const envNames: string[] = [];
+
+  const walk = (items: QPQConfigItem[]): void => {
+    for (const item of items) {
+      if (Array.isArray(item)) {
+        walk(item);
+      } else if (item.configSettingType === QPQCoreConfigSettingType.environmentSettings) {
+        const envSetting = item as EnvironmentSettingsQPQConfigSetting;
+        envNames.push(envSetting.environment);
+        walk(envSetting.settings);
+      }
+    }
+  };
+
+  walk(qpqConfig);
+  return envNames;
 };
 
 /**
