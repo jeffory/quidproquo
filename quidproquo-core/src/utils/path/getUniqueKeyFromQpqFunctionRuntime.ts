@@ -3,7 +3,7 @@ import { isQpqFunctionRuntimeAbsolutePath } from './isQpqFunctionRuntimeAbsolute
 
 export function getUniqueKeyFromQpqFunctionRuntime(qpqFunctionRuntime: QpqFunctionRuntime): string {
   if (isQpqFunctionRuntimeAbsolutePath(qpqFunctionRuntime)) {
-    return `${qpqFunctionRuntime.basePath}/${qpqFunctionRuntime.relativePath}::${qpqFunctionRuntime.functionName}`;
+    return `${qpqFunctionRuntime.relativePath}::${qpqFunctionRuntime.functionName}`;
   }
 
   return qpqFunctionRuntime;
