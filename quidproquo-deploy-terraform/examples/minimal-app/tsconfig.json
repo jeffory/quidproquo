@@ -1,0 +1,9 @@
+{
+  "extends": "quidproquo-tsconfig/tsconfig.esm.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "include": ["."]
+}
