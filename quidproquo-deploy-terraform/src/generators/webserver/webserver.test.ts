@@ -89,12 +89,12 @@ describe('apiGenerator', () => {
     expect(hcl).toContain('default_route_options');
     expect(hcl).toContain('openapi_spec_paths');
     expect(hcl).toContain('artifact_s3_bucket');
-    expect(hcl).toContain('var.api_main_route_r1_artifact_s3_bucket');
+    expect(hcl).toContain('var.api_main_route_get_health_artifact_s3_bucket');
     // variable declarations are emitted alongside the module
     const varHcl = out[0].blocks.slice(1).map(emitBlock).join('\n');
-    expect(varHcl).toContain('variable "api_main_route_r1_artifact_s3_bucket"');
-    expect(varHcl).toContain('variable "api_main_route_r1_artifact_s3_key"');
-    expect(varHcl).toContain('variable "api_main_route_r1_artifact_source_code_hash"');
+    expect(varHcl).toContain('variable "api_main_route_get_health_artifact_s3_bucket"');
+    expect(varHcl).toContain('variable "api_main_route_get_health_artifact_s3_key"');
+    expect(varHcl).toContain('variable "api_main_route_get_health_artifact_source_code_hash"');
   });
 
   it('does not emit artifact vars for routes without a runtime', () => {
