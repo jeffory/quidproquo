@@ -36,6 +36,27 @@ const MIN_CONFIG = {
   ],
 };
 
+/** Minimal config that includes a KVS and a queue so the pipeline generates .tf files. */
+const CONFIG_WITH_RESOURCES = {
+  ...MIN_CONFIG,
+  settings: [
+    ...MIN_CONFIG.settings,
+    {
+      configSettingType: '@quidproquo-core/config/KeyValueStore',
+      uniqueKey: 'users',
+      keyValueStoreName: 'users',
+      partitionKey: { key: 'pk', type: 'string' },
+      sortKeys: [],
+      indexes: [],
+    },
+    {
+      configSettingType: '@quidproquo-core/config/Queue',
+      uniqueKey: 'jobs',
+      queueName: 'jobs',
+    },
+  ],
+};
+
 describe('synth', () => {
   let tmpDir: string;
   let configPath: string;
@@ -76,6 +97,11 @@ describe('synth', () => {
     expect(typeof manifest.synthedAt).toBe('string');
   });
 
+  it('returns empty stackPaths when all settings are translator-only', async () => {
+    const result = await synth({ configPath, outDir, env: 'dev' });
+    expect(result.output.stackPaths).toEqual({});
+  });
+
   it('creates the outDir recursively when missing', async () => {
     const deepOut = path.join(tmpDir, 'a', 'b', 'c');
     const result = await synth({ configPath, outDir: deepOut, env: 'dev' });
@@ -99,5 +125,67 @@ describe('synth', () => {
     await expect(synth({ configPath, outDir, env: 'staging' })).rejects.toThrow(
       /--env "staging" is not defined/,
     );
+  });
+
+  describe('generator dispatch pipeline', () => {
+    beforeEach(async () => {
+      await fs.writeFile(configPath, JSON.stringify(CONFIG_WITH_RESOURCES));
+    });
+
+    it('writes inf.tf when a KeyValueStore resource is present', async () => {
+      const result = await synth({ configPath, outDir, env: 'dev' });
+      expect(result.output.stackPaths.inf).toBeDefined();
+      const stat = await fs.stat(result.output.stackPaths.inf!);
+      expect(stat.isFile()).toBe(true);
+    });
+
+    it('inf.tf contains a module block for the KVS resource', async () => {
+      const result = await synth({ configPath, outDir, env: 'dev' });
+      const content = await fs.readFile(result.output.stackPaths.inf!, 'utf-8');
+      expect(content).toContain('module');
+      expect(content).toContain('kvs');
+      expect(content).toContain('source');
+    });
+
+    it('inf.tf contains a module block for the queue resource', async () => {
+      const result = await synth({ configPath, outDir, env: 'dev' });
+      const content = await fs.readFile(result.output.stackPaths.inf!, 'utf-8');
+      expect(content).toContain('queue');
+    });
+
+    it('does not write .tf files for stacks with no resources', async () => {
+      const result = await synth({ configPath, outDir, env: 'dev' });
+      expect(result.output.stackPaths.bootstrap).toBeUndefined();
+      expect(result.output.stackPaths.api).toBeUndefined();
+      expect(result.output.stackPaths.web).toBeUndefined();
+    });
+
+    it('manifest includes generatedStacks listing only stacks with output', async () => {
+      const result = await synth({ configPath, outDir, env: 'dev' });
+      const manifest = JSON.parse(await fs.readFile(result.output.manifestPath, 'utf-8'));
+      expect(manifest.generatedStacks).toEqual(expect.arrayContaining(['inf']));
+      expect(manifest.generatedStacks).not.toContain('bootstrap');
+      expect(manifest.generatedStacks).not.toContain('api');
+      expect(manifest.generatedStacks).not.toContain('web');
+    });
+  });
+
+  describe('unknown setting types', () => {
+    it('skips unknown setting types with a warning and does not crash', async () => {
+      const configWithUnknown = {
+        ...MIN_CONFIG,
+        settings: [
+          ...MIN_CONFIG.settings,
+          {
+            configSettingType: '@quidproquo-custom/config/UnknownThing',
+            uniqueKey: 'unknown-thing',
+          },
+        ],
+      };
+      await fs.writeFile(configPath, JSON.stringify(configWithUnknown));
+      const result = await synth({ configPath, outDir, env: 'dev' });
+      // Should complete without throwing; unknown type is warned and skipped
+      expect(result.output.envDir).toBeDefined();
+    });
   });
 });
