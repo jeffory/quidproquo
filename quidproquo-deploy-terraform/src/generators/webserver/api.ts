@@ -41,13 +41,18 @@ export const apiGenerator: ResourceGenerator = {
     );
 
     const settings = ctx.resolved.config.settings;
-    const routes = filterByType(settings, WEBSERVER_SETTING_TYPE.Route).map((r) => ({
-      unique_key: r.uniqueKey,
-      method: readString(r, 'method'),
-      path: readString(r, 'path'),
-      runtime: r.runtime ?? null,
-      options: r.options ?? {},
-    }));
+    const routes = filterByType(settings, WEBSERVER_SETTING_TYPE.Route).map((r) => {
+      const method = readString(r, 'method') ?? '';
+      const path = readString(r, 'path') ?? '';
+      const routeKey = `${method.toLowerCase()}_${path.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '_')}`;
+      return {
+        unique_key: routeKey,
+        method,
+        path,
+        runtime: r.runtime ?? null,
+        options: r.options ?? {},
+      };
+    });
     const defaultRouteOptions = filterByType(
       settings,
       WEBSERVER_SETTING_TYPE.DefaultRouteOptions,

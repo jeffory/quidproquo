@@ -41,7 +41,7 @@ export const getMinimalAppConfig = (): QPQConfig => {
       {
         default: {
           basePath: __dirname,
-          relativePath: '/handlers/queueHandler::handler',
+          relativePath: '/handlers/queueHandler',
           functionName: 'handler',
         },
       },
@@ -55,7 +55,7 @@ export const getMinimalAppConfig = (): QPQConfig => {
     defineServiceFunction(
       {
         basePath: __dirname,
-        relativePath: '/handlers/serviceHandler::handler',
+        relativePath: '/handlers/serviceHandler',
         functionName: 'handler',
       },
       {
@@ -70,7 +70,7 @@ export const getMinimalAppConfig = (): QPQConfig => {
       '/hello',
       {
         basePath: __dirname,
-        relativePath: '/handlers/apiHandler::handler',
+        relativePath: '/handlers/apiHandler',
         functionName: 'handler',
       },
     ),
