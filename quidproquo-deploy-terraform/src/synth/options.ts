@@ -22,6 +22,13 @@ Optional options:
                       from the QPQ config; otherwise synth aborts.
   --module <name>     Module name. If set, must match the value resolved from
                       the QPQ config; otherwise synth aborts.
+  --artifacts-dir <path>
+                      Path to the pre-built Lambda artifact bundle directory.
+                      When set, generators embed local \`source_code_path\`
+                      values directly (useful for parity fixtures and local
+                      development). When omitted, generators emit Terraform
+                      \`variable\` blocks so callers supply artifact S3
+                      coordinates at apply time.
   -h, --help          Show this help text.
 `;
 
@@ -43,6 +50,7 @@ export const parseSynthArgs = (args: string[]): SynthArgsResult => {
         env: { type: 'string' },
         app: { type: 'string' },
         module: { type: 'string' },
+        'artifacts-dir': { type: 'string' },
         help: { type: 'boolean', short: 'h' },
       },
       strict: true,
@@ -59,6 +67,7 @@ export const parseSynthArgs = (args: string[]): SynthArgsResult => {
     env?: string;
     app?: string;
     module?: string;
+    'artifacts-dir'?: string;
     help?: boolean;
   };
 
@@ -81,5 +90,6 @@ export const parseSynthArgs = (args: string[]): SynthArgsResult => {
     env: values.env as string,
     app: values.app,
     module: values.module,
+    artifactsDir: values['artifacts-dir'],
   };
 };

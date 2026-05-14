@@ -24,9 +24,9 @@ import {
   websocketGenerator,
 } from './index';
 
-const buildCtx = (config: QpqConfigFile): GeneratorContext => {
+const buildCtx = (config: QpqConfigFile, artifactsDir?: string): GeneratorContext => {
   const resolved: ResolvedSynthContext = {
-    options: { configPath: '/c', outDir: '/o', env: 'dev' },
+    options: { configPath: '/c', outDir: '/o', env: 'dev', artifactsDir },
     config,
     applicationName: 'myapp',
     moduleName: 'auth',
@@ -78,6 +78,8 @@ describe('apiGenerator', () => {
     const out = apiGenerator.generate(apiSetting, ctx);
     expect(out).toHaveLength(1);
     expect(out[0].stack).toBe('api');
+    // 1 module block + 3 variable blocks for the route with a runtime
+    expect(out[0].blocks).toHaveLength(4);
     const hcl = emitBlock(out[0].blocks[0]);
     expect(hcl).toContain('module "api_main"');
     expect(hcl).toContain('"git::https://github.com/quidproquo/quidproquo-tf-modules.git//modules/api?ref=vTEST"');
@@ -86,6 +88,58 @@ describe('apiGenerator', () => {
     expect(hcl).toContain('routes');
     expect(hcl).toContain('default_route_options');
     expect(hcl).toContain('openapi_spec_paths');
+    expect(hcl).toContain('artifact_s3_bucket');
+    expect(hcl).toContain('var.api_main_route_r1_artifact_s3_bucket');
+    // variable declarations are emitted alongside the module
+    const varHcl = out[0].blocks.slice(1).map(emitBlock).join('\n');
+    expect(varHcl).toContain('variable "api_main_route_r1_artifact_s3_bucket"');
+    expect(varHcl).toContain('variable "api_main_route_r1_artifact_s3_key"');
+    expect(varHcl).toContain('variable "api_main_route_r1_artifact_source_code_hash"');
+  });
+
+  it('does not emit artifact vars for routes without a runtime', () => {
+    const apiSetting = {
+      configSettingType: WEBSERVER_SETTING_TYPE.Api,
+      uniqueKey: 'main',
+      apiSubdomain: 'api',
+      rootDomain: 'example.com',
+      apiName: 'main',
+    };
+    const routeNoRuntime = {
+      configSettingType: WEBSERVER_SETTING_TYPE.Route,
+      uniqueKey: 'static',
+      method: 'GET',
+      path: '/static',
+      runtime: null,
+    };
+    const out = apiGenerator.generate(apiSetting, buildCtx(configWith(apiSetting, routeNoRuntime)));
+    // only the module block, no variable declarations
+    expect(out[0].blocks).toHaveLength(1);
+  });
+
+  it('uses source_code_path when artifactsDir is set', () => {
+    const apiSetting = {
+      configSettingType: WEBSERVER_SETTING_TYPE.Api,
+      uniqueKey: 'main',
+      apiSubdomain: 'api',
+      rootDomain: 'example.com',
+      apiName: 'main',
+    };
+    const route = {
+      configSettingType: WEBSERVER_SETTING_TYPE.Route,
+      uniqueKey: 'r1',
+      method: 'GET',
+      path: '/health',
+      runtime: '/services/health::handler',
+    };
+    const out = apiGenerator.generate(
+      apiSetting,
+      buildCtx(configWith(apiSetting, route), '/artifacts'),
+    );
+    expect(out[0].blocks).toHaveLength(1);
+    const hcl = emitBlock(out[0].blocks[0]);
+    expect(hcl).toContain('source_code_path');
+    expect(hcl).not.toContain('var.api_main_route_r1_artifact_s3_bucket');
   });
 
   it('throws when rootDomain is missing', () => {
@@ -234,7 +288,7 @@ describe('domainProxyGenerator', () => {
 });
 
 describe('serviceFunctionGenerator', () => {
-  it('emits a service-function module with artefact variable references', () => {
+  it('emits a service-function module with artefact variable references and declarations', () => {
     const setting = {
       configSettingType: WEBSERVER_SETTING_TYPE.ServiceFunction,
       uniqueKey: 'login',
@@ -244,12 +298,35 @@ describe('serviceFunctionGenerator', () => {
     const ctx = buildCtx(configWith(setting));
     const out = serviceFunctionGenerator.generate(setting, ctx);
     expect(out[0].stack).toBe('api');
+    // 4 blocks: module + 3 variable declarations
+    expect(out[0].blocks).toHaveLength(4);
     const hcl = emitBlock(out[0].blocks[0]);
     expect(hcl).toContain('module "service_function_login"');
     expect(hcl).toContain('"login-myapp-auth-dev-qpqsfunc"');
     expect(hcl).toContain('var.service_function_login_artifact_s3_bucket');
     expect(hcl).toContain('var.service_function_login_artifact_s3_key');
     expect(hcl).toContain('var.service_function_login_artifact_source_code_hash');
+    // variable declarations
+    const varHcl = out[0].blocks.slice(1).map(emitBlock).join('\n');
+    expect(varHcl).toContain('variable "service_function_login_artifact_s3_bucket"');
+    expect(varHcl).toContain('variable "service_function_login_artifact_s3_key"');
+    expect(varHcl).toContain('variable "service_function_login_artifact_source_code_hash"');
+  });
+
+  it('uses source_code_path when artifactsDir is set (no variable blocks)', () => {
+    const setting = {
+      configSettingType: WEBSERVER_SETTING_TYPE.ServiceFunction,
+      uniqueKey: 'login',
+      functionName: 'login',
+      runtime: '/services/login::handler',
+    };
+    const ctx = buildCtx(configWith(setting), '/artifacts');
+    const out = serviceFunctionGenerator.generate(setting, ctx);
+    expect(out[0].blocks).toHaveLength(1);
+    const hcl = emitBlock(out[0].blocks[0]);
+    expect(hcl).toContain('source_code_path');
+    expect(hcl).toContain('/artifacts/login');
+    expect(hcl).not.toContain('var.service_function_login_artifact_s3_bucket');
   });
 });
 

@@ -5,7 +5,8 @@
   "description": "Minimal QPQ app fixture for translator parity tests. Run from monorepo root with npx tsx.",
   "scripts": {
     "cdk-synth": "npx tsx bin/cdk-synth.ts",
-    "config-dump": "npx tsx bin/config-dump.ts"
+    "config-dump": "npx tsx bin/config-dump.ts",
+    "tf-synth": "npx tsx bin/tf-synth.ts"
   },
   "dependencies": {},
   "devDependencies": {}
