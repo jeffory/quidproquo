@@ -6,9 +6,18 @@
  * modules; they fold into this module's inputs (`routes`, `default_route_options`,
  * `openapi_spec_paths`). The host module body owns the IAM + integration
  * wiring against the `service-function` modules each route points at.
+ *
+ * Each route that carries a `runtime` (i.e. a Lambda handler) requires its
+ * own artifact inputs.  Artifact wiring follows the same two-mode convention
+ * as the service-function and queue generators:
+ *   - No artifactsDir: emits per-route `var.<apiLabel>_route_<routeLabel>_artifact_*`
+ *     refs inside the routes list and matching `variable` declarations.
+ *   - artifactsDir set: embeds `source_code_path` directly; no variable blocks.
  */
 
-import { attrs, moduleBlock } from '../../hcl';
+import path from 'node:path';
+
+import { attrs, moduleBlock, ref, variable, type TerraformBlock } from '../../hcl';
 import { QpqConfigSettingJson } from '../../synth/types';
 import { buildModuleLabel, resolveQpqRuntimeResourceName } from '../naming';
 import { GeneratedResource, GeneratorContext, ResourceGenerator } from '../types';
@@ -40,17 +49,62 @@ export const apiGenerator: ResourceGenerator = {
       readOwner(setting),
     );
 
+    const apiLabel = buildModuleLabel(MODULE_LABEL_PREFIX, setting.uniqueKey);
+    const artifactsDir = ctx.resolved.options.artifactsDir;
     const settings = ctx.resolved.config.settings;
-    const routes = filterByType(settings, WEBSERVER_SETTING_TYPE.Route).map((r) => {
+
+    const routeSettings = filterByType(settings, WEBSERVER_SETTING_TYPE.Route);
+
+    const artifactVariableBlocks: TerraformBlock[] = [];
+
+    const routes = routeSettings.map((r) => {
       const method = readString(r, 'method') ?? '';
-      const path = readString(r, 'path') ?? '';
-      const routeKey = `${method.toLowerCase()}_${path.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '_')}`;
+      const routePath = readString(r, 'path') ?? '';
+      const routeKey = `${method.toLowerCase()}_${routePath.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '_')}`;
+      const hasRuntime = r.runtime != null;
+
+      if (!hasRuntime) {
+        return {
+          unique_key: routeKey,
+          method,
+          path: routePath,
+          runtime: null,
+          options: r.options ?? {},
+        };
+      }
+
+      const routeLabel = buildModuleLabel('route', routeKey);
+
+      if (artifactsDir) {
+        return {
+          unique_key: routeKey,
+          method,
+          path: routePath,
+          runtime: r.runtime,
+          options: r.options ?? {},
+          source_code_path: path.join(artifactsDir, routeKey),
+        };
+      }
+
+      const bucketVar = `${apiLabel}_${routeLabel}_artifact_s3_bucket`;
+      const keyVar = `${apiLabel}_${routeLabel}_artifact_s3_key`;
+      const hashVar = `${apiLabel}_${routeLabel}_artifact_source_code_hash`;
+
+      artifactVariableBlocks.push(
+        variable({ name: bucketVar, type: 'string' }),
+        variable({ name: keyVar, type: 'string' }),
+        variable({ name: hashVar, type: 'string' }),
+      );
+
       return {
         unique_key: routeKey,
         method,
-        path,
-        runtime: r.runtime ?? null,
+        path: routePath,
+        runtime: r.runtime,
         options: r.options ?? {},
+        artifact_s3_bucket: ref(`var.${bucketVar}`),
+        artifact_s3_key: ref(`var.${keyVar}`),
+        artifact_source_code_hash: ref(`var.${hashVar}`),
       };
     });
     const defaultRouteOptions = filterByType(
@@ -84,12 +138,12 @@ export const apiGenerator: ResourceGenerator = {
       },
     });
 
-    const block = moduleBlock({
-      name: buildModuleLabel(MODULE_LABEL_PREFIX, setting.uniqueKey),
+    const moduleBlk = moduleBlock({
+      name: apiLabel,
       source: ctx.moduleSource(MODULE_LOGICAL_NAME),
       attributes: moduleAttributes,
     });
 
-    return [{ stack: 'api', blocks: [block] }];
+    return [{ stack: 'api', blocks: [moduleBlk, ...artifactVariableBlocks] }];
   },
 };

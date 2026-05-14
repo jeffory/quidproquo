@@ -37,6 +37,21 @@ describe('parseSynthArgs', () => {
     expect(result).toMatchObject({ help: false, app: undefined, module: undefined });
   });
 
+  it('parses --artifacts-dir when provided', () => {
+    const result = parseSynthArgs([
+      '--config', 'c.json',
+      '--outdir', 'out',
+      '--env', 'dev',
+      '--artifacts-dir', '/path/to/artifacts',
+    ]);
+    expect(result).toMatchObject({ help: false, artifactsDir: '/path/to/artifacts' });
+  });
+
+  it('leaves artifactsDir undefined when --artifacts-dir is omitted', () => {
+    const result = parseSynthArgs(['--config', 'c.json', '--outdir', 'out', '--env', 'dev']);
+    expect(result).toMatchObject({ help: false, artifactsDir: undefined });
+  });
+
   it('throws when a required option is missing', () => {
     expect(() => parseSynthArgs(['--config', 'c.json', '--outdir', 'out'])).toThrowError(
       /Missing required option\(s\): --env/,

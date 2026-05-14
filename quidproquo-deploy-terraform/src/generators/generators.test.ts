@@ -303,7 +303,7 @@ describe('storageDrive generator', () => {
 });
 
 describe('queue generator', () => {
-  it('emits the queue + DLQ inputs', () => {
+  it('emits the queue + DLQ inputs without artifact vars when no processors', () => {
     const setting: QpqConfigSettingJson = {
       configSettingType: '@quidproquo-core/config/Queue',
       uniqueKey: 'onboarding',
@@ -313,6 +313,8 @@ describe('queue generator', () => {
       hasDeadLetterQueue: true,
     };
     const [result] = queueGenerator.generate(setting, ctx);
+    // No processors → just the module block
+    expect(result.blocks).toHaveLength(1);
     const attrs = result.blocks[0]!.attributes;
     expect(attrs.name).toEqual({ kind: 'string', value: 'onboarding-myapp-svc-dev' });
     expect(attrs.visibility_timeout_seconds).toEqual({ kind: 'number', value: 60 });
@@ -322,6 +324,37 @@ describe('queue generator', () => {
       value: 'onboarding-myapp-svc-dev-dead',
     });
     expect(attrs.max_receive_count).toEqual({ kind: 'number', value: 5 });
+    expect(attrs.handler_s3_bucket).toBeUndefined();
+  });
+
+  it('emits handler artifact variable refs + declarations when processors are present', () => {
+    const setting: QpqConfigSettingJson = {
+      configSettingType: '@quidproquo-core/config/Queue',
+      uniqueKey: 'jobs',
+      name: 'jobs',
+      hasDeadLetterQueue: true,
+      qpqQueueProcessors: { default: '/handlers/jobHandler::handler' },
+    };
+    const [result] = queueGenerator.generate(setting, ctx);
+    // module block + 3 variable declarations
+    expect(result.blocks).toHaveLength(4);
+    const moduleAttrs = result.blocks[0]!.attributes;
+    expect(moduleAttrs.handler_s3_bucket).toEqual({
+      kind: 'ref',
+      ref: 'var.queue_jobs_artifact_s3_bucket',
+    });
+    expect(moduleAttrs.handler_s3_key).toEqual({
+      kind: 'ref',
+      ref: 'var.queue_jobs_artifact_s3_key',
+    });
+    expect(moduleAttrs.handler_source_code_hash).toEqual({
+      kind: 'ref',
+      ref: 'var.queue_jobs_artifact_source_code_hash',
+    });
+    const varHcl = result.blocks.slice(1).map((b) => emitFile(file([b]))).join('\n');
+    expect(varHcl).toContain('variable "queue_jobs_artifact_s3_bucket"');
+    expect(varHcl).toContain('variable "queue_jobs_artifact_s3_key"');
+    expect(varHcl).toContain('variable "queue_jobs_artifact_source_code_hash"');
   });
 
   it('omits DLQ inputs when disabled', () => {

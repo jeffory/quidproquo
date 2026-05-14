@@ -24,6 +24,15 @@ export interface SynthOptions {
   app?: string;
   /** Optional override; if set, must equal the module name in the config. */
   module?: string;
+  /**
+   * Path to the pre-built Lambda artifact bundle directory.
+   * When set, generators embed `source_code_path` directly instead of emitting
+   * `variable` blocks for the S3 artifact inputs, mirroring the CDK synth
+   * pattern where `<artifactsDir>/<entryKey>` directories are stubbed before
+   * synthesis.  When omitted, generators emit `variable` blocks so callers can
+   * supply artifact coordinates at `terraform apply` time.
+   */
+  artifactsDir?: string;
 }
 
 /**
